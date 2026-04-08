@@ -1,0 +1,7 @@
+attack:
+  type: poisoned_rag                # poisoned_rag | corpus_poison | indirect
+  num_poison_docs: 5                # matches PoisonedRAG paper (Zou 2025)
+  target_queries_path: data/attack_corpus/target_queries.json
+  target_answer: "INJECTED_ANSWER"  # matches target_queries.json entries
+  kb_path: data/knowledge_bases/kb_poisoned/
+  attacker_level: L1                # L0 | L1 | L2 | L3

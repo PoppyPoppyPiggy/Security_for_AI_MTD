@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+*.egg
+
+# Models (large binaries)
+models/*.gguf
+models/*.bin
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+
+# Data artifacts (regeneratable)
+data/results/
+data/knowledge_bases/kb_poisoned/
+
+# Misc
+*.log
+.pytest_cache/
+settings.json

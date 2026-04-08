@@ -1,0 +1,14 @@
+Table I: MITRE ATLAS TTP to MTD Mitigation Mapping
+
++---------------+--------------------------------+--------------+----------------------+---------------+
+| ATLAS TTP     | Technique Name                 | MTD Strategy | Component            | Effectiveness |
++---------------+--------------------------------+--------------+----------------------+---------------+
+| AML.T0054     | False RAG Entry Injection      | Shuffling    | kb_rotator           | High          |
+| AML.T0020     | Poison Training Data           | Diversity    | retriever_switcher   | High          |
+| AML.T0056     | Gather RAG-Indexed Targets     | Shuffling    | kb_rotator           | Medium        |
+| AML.T0057     | RAG Database Prompting         | Diversity    | retriever_switcher   | Medium        |
+| AML.T0051     | LLM Prompt Injection           | Redundancy   | embed_rotator        | Medium        |
++---------------+--------------------------------+--------------+----------------------+---------------+
+
+SDR Triad: Shuffling (S) — Diversity (D) — Redundancy (R)
+Effectiveness: High = primary mitigation, Medium = supporting defense

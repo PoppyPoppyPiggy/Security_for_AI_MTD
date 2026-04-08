@@ -1,0 +1,24 @@
+mtd:
+  enabled: true                     # Phase 3 = enabled
+  rotation_policy: round-robin      # round-robin | random | adaptive
+  rotation_interval: 2              # rotate every N queries
+  batch_size: 1                     # retriever switches every N queries
+  kb_pool:
+    - data/knowledge_bases/kb_clean/
+    - data/knowledge_bases/kb_poisoned/
+    - data/knowledge_bases/kb_rotated/snapshot_1/
+    - data/knowledge_bases/kb_rotated/snapshot_2/
+  kb_pool_size: 4
+  retrieval_sequence:
+    - dense
+    - sparse
+    - hybrid
+  embed_models:
+    - sentence-transformers/all-MiniLM-L6-v2
+    - BAAI/bge-small-en-v1.5
+    - intfloat/e5-small-v2
+  ensemble_vote_threshold: 0.6
+  anomaly_detection:
+    enabled: true
+    sigma_threshold: 2.0
+    window_size: 50
