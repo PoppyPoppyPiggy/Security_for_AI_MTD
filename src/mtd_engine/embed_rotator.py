@@ -13,8 +13,9 @@ import logging
 from dataclasses import dataclass
 
 import numpy as np
-import yaml
 from sentence_transformers import SentenceTransformer
+
+from src.utils import safe_load_config
 
 logger = logging.getLogger(__name__)
 
@@ -45,8 +46,7 @@ class EmbedRotator:
     """
 
     def __init__(self, config_path: str = "config/mtd_config.yaml") -> None:
-        with open(config_path) as f:
-            cfg = yaml.safe_load(f)
+        cfg = safe_load_config(config_path)
         mtd_cfg = cfg["mtd"]
 
         self.model_names: list[str] = mtd_cfg["embed_models"]

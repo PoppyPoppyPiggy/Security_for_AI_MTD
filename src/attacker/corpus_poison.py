@@ -16,10 +16,10 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
-import yaml
 from sentence_transformers import SentenceTransformer
 
 from src.rag_pipeline.indexer import Chunk
+from src.utils import safe_load_config
 
 logger = logging.getLogger(__name__)
 
@@ -62,12 +62,13 @@ class CorpusPoisonAttacker:
     """
 
     def __init__(self, config_path: str = "config/attack_config.yaml") -> None:
-        with open(config_path) as f:
-            cfg = yaml.safe_load(f)
+        cfg = safe_load_config(config_path)
         atk_cfg = cfg["attack"]
 
         self.attacker_level: str = atk_cfg["attacker_level"]
         self.num_poison_docs: int = atk_cfg["num_poison_docs"]
+        self.embedding_model: str = atk_cfg.get("embedding_model", "sentence-transformers/all-MiniLM-L6-v2")
+        self.injection_ratio: float = atk_cfg.get("injection_ratio", 0.0004)
         self._encoder: SentenceTransformer | None = None
 
         logger.info("CorpusPoisonAttacker initialized: level=%s", self.attacker_level)
@@ -76,9 +77,7 @@ class CorpusPoisonAttacker:
     def encoder(self) -> SentenceTransformer:
         """Lazy-load embedding model."""
         if self._encoder is None:
-            self._encoder = SentenceTransformer(
-                "sentence-transformers/all-MiniLM-L6-v2"
-            )
+            self._encoder = SentenceTransformer(self.embedding_model)
         return self._encoder
 
     def craft_adversarial_passage(

@@ -17,10 +17,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import numpy as np
-import yaml
 
 from src.evaluation.metrics import summarize
 from src.rag_pipeline.pipeline import RAGPipeline
+from src.utils import safe_load_config
 
 logger = logging.getLogger(__name__)
 
@@ -70,8 +70,7 @@ def run_evaluation(
     """
     set_seed(seed)
 
-    with open(attack_config_path) as f:
-        atk_cfg = yaml.safe_load(f)["attack"]
+    atk_cfg = safe_load_config(attack_config_path)["attack"]
 
     target_data = load_target_queries(atk_cfg["target_queries_path"])
     target_queries = [d["query"] for d in target_data]
@@ -81,7 +80,7 @@ def run_evaluation(
     # Use poisoned KB for baseline attack measurement, clean KB otherwise
     if kb_path is None:
         if mode == "baseline":
-            kb_path = atk_cfg["kb_path"]
+            kb_path = atk_cfg["kb_poisoned_path"]
         else:
             kb_path = None  # let pipeline decide from mtd_config
 
@@ -126,7 +125,8 @@ def run_evaluation(
     }
 
     # Save results
-    results_dir = Path("data/results")
+    rag_cfg = safe_load_config(rag_config_path)["rag"]
+    results_dir = Path(rag_cfg.get("results_path", "data/results"))
     results_dir.mkdir(parents=True, exist_ok=True)
     filename = f"{mode}_{atk_cfg['type']}_{atk_cfg['attacker_level']}_seed{seed}_{timestamp}.json"
     results_path = results_dir / filename

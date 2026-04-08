@@ -5,7 +5,14 @@ rag:
   retrieval_strategy: dense         # dense | sparse | hybrid
   hybrid_alpha: 0.5                 # weight for dense score in hybrid
   embedding_model: sentence-transformers/all-MiniLM-L6-v2
-  llm_provider: llama_cpp            # llama_cpp (local GGUF)
+  llm_provider: llama_cpp           # extractive | llama_cpp
   llm_model_path: models/tinyllama-1.1b-q4.gguf
+  llm_n_ctx: 2048
+  llm_n_threads: 4
+  llm_seed: 42
   max_tokens: 256
   temperature: 0.0                  # deterministic for reproducibility
+  context_max_chars: 3000           # hard truncate context to avoid overflow
+  index_path: data/index/
+  results_path: data/results/
+  logs_path: logs/

@@ -17,10 +17,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 import numpy as np
-import yaml
 from sentence_transformers import SentenceTransformer
 
 from src.rag_pipeline.pipeline import PipelineOutput
+from src.utils import safe_load_config
 
 logger = logging.getLogger(__name__)
 
@@ -68,14 +68,15 @@ class PoisonedRAGAttacker:
     """
 
     def __init__(self, config_path: str = "config/attack_config.yaml") -> None:
-        with open(config_path) as f:
-            cfg = yaml.safe_load(f)
+        cfg = safe_load_config(config_path)
         atk_cfg = cfg["attack"]
 
         self.num_poison_docs: int = atk_cfg["num_poison_docs"]
         self.target_queries_path: str = atk_cfg["target_queries_path"]
         self.default_target_answer: str = atk_cfg["target_answer"]
         self.attacker_level: str = atk_cfg["attacker_level"]
+        self.embedding_model: str = atk_cfg.get("embedding_model", "sentence-transformers/all-MiniLM-L6-v2")
+        self.optimized_sim_threshold: float = atk_cfg.get("optimized_sim_threshold", 0.85)
 
         self._encoder: SentenceTransformer | None = None
         logger.info("PoisonedRAGAttacker initialized: level=%s, num_docs=%d",
@@ -85,9 +86,7 @@ class PoisonedRAGAttacker:
     def encoder(self) -> SentenceTransformer:
         """Lazy-load embedding model for optimized strategy."""
         if self._encoder is None:
-            self._encoder = SentenceTransformer(
-                "sentence-transformers/all-MiniLM-L6-v2"
-            )
+            self._encoder = SentenceTransformer(self.embedding_model)
         return self._encoder
 
     def craft_poison_docs(
@@ -191,8 +190,9 @@ class PoisonedRAGAttacker:
             best_sim = self._cosine_sim(best_text, query_emb)
 
             # Iteratively append phrases to maximize similarity
+            iterations_run = 0
             for iteration in range(10):
-                if best_sim >= 0.85:
+                if best_sim >= self.optimized_sim_threshold:
                     break
                 phrase = augmentation_phrases[
                     (doc_idx * 10 + iteration) % len(augmentation_phrases)
@@ -202,6 +202,7 @@ class PoisonedRAGAttacker:
                 if sim > best_sim:
                     best_text = candidate
                     best_sim = sim
+                iterations_run = iteration + 1
 
             docs.append(PoisonDoc(
                 text=best_text,
@@ -209,7 +210,7 @@ class PoisonedRAGAttacker:
                 target_answer=target_answer,
             ))
             logger.debug("Optimized doc %d: sim=%.4f, iterations=%d",
-                         doc_idx, best_sim, iteration + 1)
+                         doc_idx, best_sim, iterations_run)
 
         logger.info("Crafted %d optimized poison docs for query='%s'",
                      len(docs), target_query[:50])

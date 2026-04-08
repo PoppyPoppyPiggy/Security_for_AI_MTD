@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import logging
 
-import yaml
+from src.utils import safe_load_config
 
 logger = logging.getLogger(__name__)
 
@@ -34,8 +34,7 @@ class RetrieverSwitcher:
     """
 
     def __init__(self, config_path: str = "config/mtd_config.yaml") -> None:
-        with open(config_path) as f:
-            cfg = yaml.safe_load(f)
+        cfg = safe_load_config(config_path)
         mtd_cfg = cfg["mtd"]
 
         self.sequence: list[str] = mtd_cfg["retrieval_sequence"]

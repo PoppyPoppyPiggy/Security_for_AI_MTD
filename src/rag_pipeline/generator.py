@@ -12,9 +12,8 @@ import logging
 from dataclasses import dataclass
 from pathlib import Path
 
-import yaml
-
 from src.rag_pipeline.retriever import RetrievalResult
+from src.utils import safe_load_config
 
 logger = logging.getLogger(__name__)
 
@@ -63,12 +62,13 @@ class Generator:
         config_path: str = "config/rag_config.yaml",
         mode: str | None = None,
     ) -> None:
-        with open(config_path) as f:
-            cfg = yaml.safe_load(f)
+        cfg = safe_load_config(config_path)
         rag_cfg = cfg["rag"]
 
         self.max_tokens: int = rag_cfg.get("max_tokens", 256)
         self.temperature: float = rag_cfg.get("temperature", 0.0)
+        self.context_max_chars: int = rag_cfg.get("context_max_chars", 3000)
+        self.seed: int = rag_cfg.get("llm_seed", 42)
         self.mode: str = mode or rag_cfg.get("llm_provider", "extractive")
         self._llm = None
 
@@ -80,19 +80,29 @@ class Generator:
 
     def _init_llama_cpp(self, rag_cfg: dict) -> None:
         """Initialize llama.cpp model from GGUF file."""
-        from llama_cpp import Llama
+        try:
+            from llama_cpp import Llama
+        except ImportError:
+            raise ImportError(
+                "llama-cpp-python is required for llama_cpp mode.\n"
+                "Install: pip install llama-cpp-python"
+            )
 
         model_path = rag_cfg["llm_model_path"]
         if not Path(model_path).exists():
             raise FileNotFoundError(f"GGUF model not found: {model_path}")
 
+        n_ctx = rag_cfg.get("llm_n_ctx", 2048)
+        n_threads = rag_cfg.get("llm_n_threads", 4)
+
         self._llm = Llama(
             model_path=model_path,
-            n_ctx=2048,
-            n_threads=4,
+            n_ctx=n_ctx,
+            n_threads=n_threads,
             verbose=False,
         )
-        logger.info("GGUF model loaded: %s", model_path)
+        logger.info("GGUF model loaded: %s (n_ctx=%d, n_threads=%d)",
+                     model_path, n_ctx, n_threads)
 
     def generate(self, query: str, retrieved_chunks: list[RetrievalResult]) -> GeneratorOutput:
         """Generate an answer from retrieved context.
@@ -133,14 +143,13 @@ class Generator:
             max_tokens=self.max_tokens,
             temperature=self.temperature,
             echo=False,
-            seed=42,
+            seed=self.seed,
         )
         answer = output["choices"][0]["text"].strip()
         token_count = output["usage"]["completion_tokens"]
         logger.info("GGUF answer: %d tokens, query='%s'", token_count, query[:50])
         return GeneratorOutput(answer=answer, prompt_used=prompt, token_count=token_count)
 
-    @staticmethod
-    def _build_context(chunks: list[RetrievalResult]) -> str:
+    def _build_context(self, chunks: list[RetrievalResult]) -> str:
         joined = "\n---\n".join(r.chunk.text for r in chunks)
-        return joined[:3000]
+        return joined[:self.context_max_chars]

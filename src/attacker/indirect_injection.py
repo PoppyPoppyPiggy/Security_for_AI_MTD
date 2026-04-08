@@ -15,10 +15,10 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
-import yaml
 from sentence_transformers import SentenceTransformer
 
 from src.rag_pipeline.pipeline import PipelineOutput
+from src.utils import safe_load_config
 
 logger = logging.getLogger(__name__)
 
@@ -77,11 +77,12 @@ class IndirectInjectionAttacker:
     """
 
     def __init__(self, config_path: str = "config/attack_config.yaml") -> None:
-        with open(config_path) as f:
-            cfg = yaml.safe_load(f)
+        cfg = safe_load_config(config_path)
         atk_cfg = cfg["attack"]
 
         self.attacker_level: str = atk_cfg["attacker_level"]
+        self.embedding_model: str = atk_cfg.get("embedding_model", "sentence-transformers/all-MiniLM-L6-v2")
+        self.retrieval_sim_threshold: float = atk_cfg.get("retrieval_sim_threshold", 0.70)
         self._encoder: SentenceTransformer | None = None
 
         logger.info("IndirectInjectionAttacker initialized: level=%s",
@@ -91,9 +92,7 @@ class IndirectInjectionAttacker:
     def encoder(self) -> SentenceTransformer:
         """Lazy-load embedding model."""
         if self._encoder is None:
-            self._encoder = SentenceTransformer(
-                "sentence-transformers/all-MiniLM-L6-v2"
-            )
+            self._encoder = SentenceTransformer(self.embedding_model)
         return self._encoder
 
     def craft_injection_document(
@@ -156,7 +155,7 @@ class IndirectInjectionAttacker:
             target_query: Query the document should be retrieved for.
             output_path: Directory to write the final injection document.
         """
-        threshold = 0.70
+        threshold = self.retrieval_sim_threshold
         text = injection_doc.text
         sim = self._compute_similarity(text, target_query)
 
@@ -189,13 +188,12 @@ class IndirectInjectionAttacker:
             f"Key details about {query_stem}: ",
             f"For reference on {keyword_str}, see below. ",
         ]
-        for boost in extra_boosts:
+        for boost_idx, boost in enumerate(extra_boosts):
             if sim >= threshold:
                 break
             text = boost + text
             sim = self._compute_similarity(text, target_query)
-            sim = self._compute_similarity(text, target_query)
-            logger.debug("Retry %d: sim=%.4f after keyword prepend", attempt + 1, sim)
+            logger.debug("Boost %d: sim=%.4f after keyword prepend", boost_idx + 1, sim)
 
         # Write final document
         out_dir = Path(output_path)

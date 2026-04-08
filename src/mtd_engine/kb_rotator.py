@@ -15,7 +15,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 
 import numpy as np
-import yaml
+
+from src.utils import safe_load_config
 
 logger = logging.getLogger(__name__)
 
@@ -59,8 +60,7 @@ class KBRotator:
     """
 
     def __init__(self, config_path: str = "config/mtd_config.yaml") -> None:
-        with open(config_path) as f:
-            cfg = yaml.safe_load(f)
+        cfg = safe_load_config(config_path)
         mtd_cfg = cfg["mtd"]
 
         self.policy = RotationPolicy(mtd_cfg["rotation_policy"])
@@ -115,7 +115,10 @@ class KBRotator:
         old_kb = state.active_kb_id
         pool = state.pool
 
-        if self.policy == RotationPolicy.ROUND_ROBIN:
+        if old_kb not in pool:
+            logger.warning("Active KB '%s' not in pool, resetting to first", old_kb)
+            next_idx = 0
+        elif self.policy == RotationPolicy.ROUND_ROBIN:
             current_idx = pool.index(old_kb)
             next_idx = (current_idx + 1) % len(pool)
         else:

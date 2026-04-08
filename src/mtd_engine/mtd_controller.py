@@ -15,11 +15,10 @@ import logging
 from dataclasses import dataclass
 from enum import Enum
 
-import yaml
-
 from src.mtd_engine.embed_rotator import EmbedRotator
 from src.mtd_engine.kb_rotator import KBRotator
 from src.mtd_engine.retriever_switcher import RetrieverSwitcher
+from src.utils import safe_load_config
 
 logger = logging.getLogger(__name__)
 
@@ -65,12 +64,12 @@ class MTDController:
     """
 
     def __init__(self, config_path: str = "config/mtd_config.yaml") -> None:
-        with open(config_path) as f:
-            cfg = yaml.safe_load(f)
+        cfg = safe_load_config(config_path)
         mtd_cfg = cfg["mtd"]
 
         self.enabled: bool = mtd_cfg["enabled"]
         self.rotation_interval: int = mtd_cfg["rotation_interval"]
+        self.embed_rotation_interval: int = mtd_cfg.get("embed_rotation_interval", mtd_cfg["rotation_interval"])
         self.anomaly_enabled: bool = mtd_cfg["anomaly_detection"]["enabled"]
         self.sigma_threshold: float = mtd_cfg["anomaly_detection"]["sigma_threshold"]
 
@@ -144,8 +143,8 @@ class MTDController:
             logger.warning("Anomaly detected: score=%.4f, forcing hybrid retrieval",
                            self.kb_state.anomaly_score)
 
-        # 5. Rotate embedding model at rotation interval
-        if self._query_counter % self.rotation_interval == 0:
+        # 5. Rotate embedding model at embed rotation interval
+        if self._query_counter % self.embed_rotation_interval == 0:
             self.embed_state = self.embed_rotator.rotate_model(self.embed_state)
 
         self._transition(MTDState.MONITORING)

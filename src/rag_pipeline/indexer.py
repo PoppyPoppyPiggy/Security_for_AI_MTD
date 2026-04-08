@@ -16,9 +16,10 @@ from pathlib import Path
 
 import faiss
 import numpy as np
-import yaml
 from rank_bm25 import BM25Okapi
 from sentence_transformers import SentenceTransformer
+
+from src.utils import safe_load_config
 
 logger = logging.getLogger(__name__)
 
@@ -55,8 +56,7 @@ class DocumentIndexer:
     """
 
     def __init__(self, config_path: str = "config/rag_config.yaml") -> None:
-        with open(config_path) as f:
-            cfg = yaml.safe_load(f)
+        cfg = safe_load_config(config_path)
         rag_cfg = cfg["rag"]
         self.chunk_size: int = rag_cfg["chunk_size"]
         self.chunk_overlap: int = rag_cfg["chunk_overlap"]

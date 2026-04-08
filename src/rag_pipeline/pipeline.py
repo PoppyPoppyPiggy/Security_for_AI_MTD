@@ -13,11 +13,10 @@ import time
 from dataclasses import dataclass
 from typing import Any, Callable
 
-import yaml
-
 from src.rag_pipeline.generator import Generator, GeneratorOutput
 from src.rag_pipeline.indexer import Chunk, DocumentIndexer
 from src.rag_pipeline.retriever import Retriever, RetrievalResult
+from src.utils import safe_load_config
 
 logger = logging.getLogger(__name__)
 
@@ -61,10 +60,8 @@ class RAGPipeline:
         self.rag_config_path = rag_config_path
         self.mtd_config_path = mtd_config_path
 
-        with open(rag_config_path) as f:
-            self.rag_cfg = yaml.safe_load(f)["rag"]
-        with open(mtd_config_path) as f:
-            self.mtd_cfg = yaml.safe_load(f)["mtd"]
+        self.rag_cfg = safe_load_config(rag_config_path)["rag"]
+        self.mtd_cfg = safe_load_config(mtd_config_path)["mtd"]
 
         self.top_k: int = self.rag_cfg["top_k"]
         self.strategy: str = self.rag_cfg["retrieval_strategy"]
@@ -83,7 +80,7 @@ class RAGPipeline:
         if kb_path:
             self.kb_path = kb_path
         elif mode == "baseline":
-            self.kb_path = "data/knowledge_bases/kb_clean/"
+            self.kb_path = self.mtd_cfg["kb_pool"][0]
         elif self.mtd is not None:
             self.kb_path = self.mtd.get_active_config()["kb"]
         else:

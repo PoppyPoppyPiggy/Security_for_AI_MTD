@@ -12,11 +12,11 @@ from dataclasses import dataclass
 
 import faiss
 import numpy as np
-import yaml
 from rank_bm25 import BM25Okapi
 from sentence_transformers import SentenceTransformer
 
 from src.rag_pipeline.indexer import Chunk
+from src.utils import safe_load_config
 
 logger = logging.getLogger(__name__)
 
@@ -69,8 +69,7 @@ class Retriever:
         self.chunks = chunks
         self.encoder = encoder
 
-        with open(config_path) as f:
-            cfg = yaml.safe_load(f)
+        cfg = safe_load_config(config_path)
         self.hybrid_alpha: float = cfg["rag"]["hybrid_alpha"]
 
     def retrieve(self, query: str, top_k: int = 5) -> list[RetrievalResult]:

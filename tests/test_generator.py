@@ -39,14 +39,16 @@ def mock_chunks() -> list[RetrievalResult]:
 class TestBuildContext:
     def test_joins_chunks(self, mock_chunks: list[RetrievalResult]) -> None:
         """Context should join chunk texts with --- separator."""
-        context = Generator._build_context(mock_chunks)
+        gen = Generator(mode="extractive")
+        context = gen._build_context(mock_chunks)
         assert "---" in context
         assert "firewall" in context
         assert "Encryption" in context
 
     def test_empty_chunks(self) -> None:
         """Empty chunk list should produce empty context."""
-        context = Generator._build_context([])
+        gen = Generator(mode="extractive")
+        context = gen._build_context([])
         assert context == ""
 
 
