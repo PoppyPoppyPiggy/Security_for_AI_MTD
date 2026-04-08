@@ -1,0 +1,20 @@
+\begin{table}[t]
+\centering
+\caption{Comparison with Existing RAG Defense Frameworks}
+\label{tab:comparison}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lcccccccc}
+\toprule
+Framework & Venue & Dynamic & Train-Free & Certified & ATLAS & ASR$\downarrow$ & Faithful \\
+\midrule
+  RobustRAG & ICML 2024 & — & \checkmark & \checkmark & — & certified & — \\
+  TrustRAG & AAAI-W 2026 & — & \checkmark & — & — & ~0.10 & — \\
+  SeCon-RAG & NeurIPS 2025 & — & — & — & — & 0.02 & — \\
+  ReliabilityRAG & NeurIPS 2025 & — & \checkmark & \checkmark & — & provable & — \\
+  RAGuard & NeurIPS 2025 & — & — & — & — & varies & — \\
+  RAGShield & arXiv 2026 & — & \checkmark & — & — & 0.00 & — \\
+  \textbf{ATLAS-MTD-RAG (Ours)} & INTCOM 2026 & \checkmark & \checkmark & — & \checkmark & — & — \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}

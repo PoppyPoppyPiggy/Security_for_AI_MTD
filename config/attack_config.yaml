@@ -10,3 +10,6 @@ attack:
   embedding_model: sentence-transformers/all-MiniLM-L6-v2
   optimized_sim_threshold: 0.85     # target similarity for optimized strategy
   retrieval_sim_threshold: 0.70     # min similarity for retrieval injection
+  benchmarks:
+    ragsecbench_path: null          # path to RAGSecBench data (null = synthetic)
+    saferag_path: null              # path to SafeRAG data (null = synthetic)

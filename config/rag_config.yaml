@@ -16,3 +16,5 @@ rag:
   index_path: data/index/
   results_path: data/results/
   logs_path: logs/
+  narr_enabled: true                # compute NARR in extended evaluator
+  faithfulness_eval: true           # compute RAGChecker faithfulness metrics

@@ -1,0 +1,17 @@
+Table II: Comparison with Existing RAG Defense Frameworks
+
++------------------------+----------------+---------+----------+----------+---------+------------+------------+
+| Framework              | Venue          | Dyn.    | TrnFree  | Certif.  | ATLAS   | ASR_mtd    | Faith.     |
++------------------------+----------------+---------+----------+----------+---------+------------+------------+
+| RobustRAG              | ICML 2024      | N       | Y        | Y        | N       | certified  | —          |
+| TrustRAG               | AAAI-W 2026    | N       | Y        | N        | N       | ~0.10      | —          |
+| SeCon-RAG              | NeurIPS 2025   | N       | N        | N        | N       | 0.02       | —          |
+| ReliabilityRAG         | NeurIPS 2025   | N       | Y        | Y        | N       | provable   | —          |
+| RAGuard                | NeurIPS 2025   | N       | N        | N        | N       | varies     | —          |
+| RAGShield              | arXiv 2026     | N       | Y        | N        | N       | 0.00       | —          |
+| ATLAS-MTD-RAG (Ours)   | INTCOM 2026    | Y       | Y        | N        | Y       | —          | —          |
++------------------------+----------------+---------+----------+----------+---------+------------+------------+
+
+Dyn. = Dynamic Defense, TrnFree = Training-Free, Certif. = Certified Robust
+ATLAS = MITRE ATLAS TTP Mapped, ASR_mtd = Attack Success Rate after defense
+Faith. = Faithfulness Score (RAGChecker methodology)
