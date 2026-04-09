@@ -7,7 +7,9 @@ mtd:
     - data/knowledge_bases/kb_clean/
     - data/knowledge_bases/kb_rotated/snapshot_1/
     - data/knowledge_bases/kb_rotated/snapshot_2/
-  kb_pool_size: 3
+    - data/knowledge_bases/kb_rotated/snapshot_3/
+    - data/knowledge_bases/kb_rotated/snapshot_4/
+  kb_pool_size: 5
   retrieval_sequence:
     - dense
     - sparse

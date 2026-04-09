@@ -18,9 +18,9 @@ from src.evaluation.evaluator import load_target_queries, run_evaluation, set_se
 
 class TestLoadTargetQueries:
     def test_loads_correctly(self) -> None:
-        """Should load 5 target queries from seed data."""
+        """Should load 50 target queries from seed data."""
         data = load_target_queries("data/attack_corpus/target_queries.json")
-        assert len(data) == 5
+        assert len(data) == 50
         assert "query" in data[0]
         assert "target_answer" in data[0]
         assert "ground_truth" in data[0]
