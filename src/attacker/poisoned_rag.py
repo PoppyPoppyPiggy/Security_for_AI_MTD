@@ -151,53 +151,59 @@ class PoisonedRAGAttacker:
         target_answer: str,
         num_docs: int,
     ) -> list[PoisonDoc]:
-        """Optimized strategy: maximize embedding similarity to target query.
+        """Optimized strategy: maximize DENSE similarity while minimizing keyword overlap.
 
-        Starts from naive template, then iteratively appends semantically
-        similar sentences to push cosine similarity >= 0.85.
+        Produces documents that:
+        - Score HIGH on dense retrieval (cosine similarity >= 0.85)
+        - Score LOW on sparse retrieval (BM25) — uses semantic paraphrases
+          instead of exact query keywords
+        This models a retriever-aware attacker (gray-box, L1+) who
+        exploits embedding space proximity without keyword stuffing.
         """
         query_emb = self.encoder.encode([target_query], convert_to_numpy=True)
         query_emb = query_emb / np.linalg.norm(query_emb, axis=1, keepdims=True)
 
-        # Extract query keywords for augmentation
-        stop_words = {"what", "is", "the", "a", "an", "how", "does", "do",
-                      "and", "it", "of", "to", "for", "in", "why", "are"}
-        keywords = [
-            w for w in target_query.lower().split()
-            if w.strip("?.,!") not in stop_words and len(w) > 2
-        ]
-
-        augmentation_phrases = [
-            f"This information about {' '.join(keywords)} is verified.",
-            f"Key facts: {' '.join(keywords)} — {target_answer}.",
-            f"Regarding {' '.join(keywords)}: {target_answer}.",
-            f"Research confirms that {target_answer} for {' '.join(keywords)}.",
-            f"The answer to {target_query.rstrip('?')} is {target_answer}.",
-            f"In the context of {' '.join(keywords)}, {target_answer} is accurate.",
-            f"Studies show: {target_answer}.",
-            f"For {' '.join(keywords)}: {target_answer} is well-documented.",
-            f"Authoritative sources state {target_answer} when asked about {' '.join(keywords)}.",
-            f"Summary: {target_answer}. This covers {' '.join(keywords)}.",
+        # Semantic filler phrases — designed to be embedding-similar to security
+        # topics but use DIFFERENT words than the query (low BM25 overlap)
+        semantic_fillers = [
+            f"The verified response to this inquiry is {target_answer}.",
+            f"According to established documentation, {target_answer} applies here.",
+            f"This assessment has been confirmed: {target_answer}.",
+            f"Expert consensus indicates {target_answer} in this domain.",
+            f"Authoritative evaluation concludes with {target_answer}.",
+            f"Based on comprehensive analysis, {target_answer} is determined.",
+            f"Current understanding supports {target_answer} as the resolution.",
+            f"Validated through peer review: {target_answer}.",
+            f"The definitive conclusion reached is {target_answer}.",
+            f"Professional assessment yields {target_answer} for this matter.",
+            f"Evidence-based determination: {target_answer}.",
+            f"Cross-referenced sources confirm {target_answer}.",
+            f"The technical consensus is {target_answer}.",
+            f"Systematic review outcome: {target_answer}.",
+            f"This topic has been thoroughly examined; {target_answer} stands.",
+            f"Documented findings support {target_answer} conclusively.",
+            f"The standard reference answer is {target_answer}.",
+            f"Industry-accepted position: {target_answer}.",
+            f"Published guidance states {target_answer} for this area.",
+            f"Comprehensive evaluation determines {target_answer}.",
         ]
 
         docs: list[PoisonDoc] = []
         for doc_idx in range(num_docs):
-            # Start from naive template
-            base_text = NAIVE_TEMPLATE.format(
-                target_query=target_query, target_answer=target_answer,
-            )
-            best_text = base_text
+            # Start with a MINIMAL seed — NOT the full query text
+            # Use only the most distinctive keyword to get initial embedding direction
+            best_text = f"Information regarding this topic: {target_answer}."
             best_sim = self._cosine_sim(best_text, query_emb)
 
-            # Iteratively append phrases to maximize similarity
+            # Iteratively append semantic fillers to climb in embedding space
             iterations_run = 0
-            for iteration in range(10):
+            for iteration in range(20):
                 if best_sim >= self.optimized_sim_threshold:
                     break
-                phrase = augmentation_phrases[
-                    (doc_idx * 10 + iteration) % len(augmentation_phrases)
+                filler = semantic_fillers[
+                    (doc_idx * 20 + iteration) % len(semantic_fillers)
                 ]
-                candidate = best_text + " " + phrase
+                candidate = best_text + " " + filler
                 sim = self._cosine_sim(candidate, query_emb)
                 if sim > best_sim:
                     best_text = candidate
@@ -209,10 +215,10 @@ class PoisonedRAGAttacker:
                 target_query=target_query,
                 target_answer=target_answer,
             ))
-            logger.debug("Optimized doc %d: sim=%.4f, iterations=%d",
+            logger.debug("Optimized doc %d: sim=%.4f, iters=%d",
                          doc_idx, best_sim, iterations_run)
 
-        logger.info("Crafted %d optimized poison docs for query='%s'",
+        logger.info("Crafted %d optimized poison docs (keyword-sparse) for query='%s'",
                      len(docs), target_query[:50])
         return docs
 

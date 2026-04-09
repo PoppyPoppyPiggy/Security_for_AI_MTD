@@ -1,0 +1,10 @@
+Table VI: ASR by Retrieval Strategy — Naive vs Optimized Attack (n=50)
+
++------------------+------------+----------------+
+| Strategy         | Naive ASR  | Optimized ASR  |
++------------------+------------+----------------+
+| Dense (fixed)    |      98.0% |          16.0% |
+| Sparse (fixed)   |     100.0% |          96.0% |
+| Hybrid (fixed)   |     100.0% |          84.0% |
+| MTD-D (rotate)   |      98.0% |          60.0% |
++------------------+------------+----------------+
