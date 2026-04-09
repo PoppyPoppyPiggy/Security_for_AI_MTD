@@ -1,0 +1,23 @@
+Table V: ASR (%) under Realistic KB Pool Scenarios (n=50, seed=42)
+
++-----------+--------+--------+--------+--------+
+| Scenario  | No Def | MTD-S  | MTD-D  |MTD-SDR |
++-----------+--------+--------+--------+--------+
+| A(p=0)    |  98.0% |   0.0% |  98.0% |   0.0% |
+| B(p=1)    |  98.0% |  20.0% |  98.0% |  20.0% |
+| C(p=2)    |  98.0% |  58.0% |  98.0% |  58.0% |
++-----------+--------+--------+--------+--------+
+
+A = Clean pool (0 poisoned), B = Realistic (1 poisoned/5)
+C = Severe (2 poisoned/5), p = # poisoned KBs in pool
+
+NARR (Normalized Attack Reduction Rate):
+  Scenario A × MTD-S  : NARR = 1.0000
+  Scenario A × MTD-D  : NARR = 0.0000
+  Scenario A × MTD-SDR: NARR = 1.0000
+  Scenario B × MTD-S  : NARR = 0.7959
+  Scenario B × MTD-D  : NARR = 0.0000
+  Scenario B × MTD-SDR: NARR = 0.7959
+  Scenario C × MTD-S  : NARR = 0.4082
+  Scenario C × MTD-D  : NARR = 0.0000
+  Scenario C × MTD-SDR: NARR = 0.4082
